@@ -2,7 +2,7 @@
 
 Oceniasz **pojedynczy tekst** (wpis lub komentarz) dwiema etykietami: `ai` i `work`.
 
-To pierwsza, wstępna analiza: służy do przesiania tekstów niezwiązanych z AI i pracą. Ocena tego, co autor mówi o skutkach AI dla pracy, oraz pogłębiona anotacja będą osobnym etapem, już na przefiltrowanym zbiorze.
+To pierwsza, wstępna analiza: służy do przesiania tekstów niezwiązanych z pracą. Do [etapu 2](annotation-guidelines-stage2.md) trafiają wszystkie teksty z `work` = yes, także bez AI, bo przed 2023 rokiem tekstów o AI i pracy prawie nie ma, a niepewność pracy chcemy porównać przed premierą ChatGPT i po niej. `ai` pozwala potem oddzielić teksty o AI.
 
 ## Zasady ogólne
 
@@ -43,7 +43,7 @@ To pierwsza, wstępna analiza: służy do przesiania tekstów niezwiązanych z A
 
 ## Kontrola jakości
 
-Cały zbiór anotuje i filtruje (odrzuca teksty niezwiązane z AI) mały model (Qwen3 8B), więc najpierw sprawdzamy go na próbce ludzkiej. 150 tekstów zostało zanotowanych przez dwie osoby, a spory rozstrzyga osoba trzecia. Etykiety ludzi są wzorcem, z którym porównujemy etykiety modelu, zwłaszcza `ai` i `work`, bo to one decydują, które teksty zostają w zbiorze.
+Cały zbiór anotuje i filtruje (odrzuca teksty niezwiązane z pracą) model (Qwen3 8B, w ponownym przebiegu `gpt-4.1-mini`), więc najpierw sprawdzamy go na próbce ludzkiej. 150 tekstów zostało zanotowanych przez dwie osoby, a spory rozstrzyga osoba trzecia. Etykiety ludzi są wzorcem, z którym porównujemy etykiety modelu, zwłaszcza `work`, bo to on decyduje, które teksty trafiają do etapu 2, oraz `ai`, który dzieli je na teksty z AI i bez. Ponowny przebieg etapu 1 na oczyszczonym zbiorze (`wykop_entries_clean.csv`) wykonuje `gpt-4.1-mini` (wersja 2025-04-14, temperatura 0) na Azure OpenAI. Wybrany na drugiej próbie 150 tekstów (`wykop_sample_2`, Zuza i Mikołaj): kappa ze złotą etykietą 0,99 dla `ai` i 0,84 dla `work`, przy kappie między anotatorami 0,86 i 0,55; `gpt-4o` dał 0,97 i 0,91 za około sześć razy wyższy koszt.
 
 ## Format
 

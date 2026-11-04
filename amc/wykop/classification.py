@@ -1,6 +1,7 @@
 """Classify entries and comments in parallel requests, for stage 1 or stage 2 labels.
 
-Stage 1 (`job_concern`: ai, work) writes `wykop_stage1.csv`; the older
+Stage 1 (`job_concern` on Ollama, or `ai_work` on Azure: ai, work) writes `wykop_stage1.csv`
+or `wykop_stage1_azure.csv` with the same columns; the older
 `wykop_classified.csv` also has a `stance` column and is kept only as history. Stage 2
 (`job_concern_details`) writes `STAGE2_COLUMNS` to `wykop_stage2.csv`. `type` and
 `entry_id` are the key. Rows are appended as answers arrive, because the collection is too
@@ -84,7 +85,7 @@ def completed(
 
 def source_rows(path: Path) -> list[dict[str, str]]:
     """Texts to classify: any CSV with type, entry_id and text, such as wykop_entries.csv or
-    an export like wykop_ai_work.csv."""
+    an export like wykop_work.csv."""
     with path.open(encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
         if not SOURCE_COLUMNS <= set(reader.fieldnames or ()):

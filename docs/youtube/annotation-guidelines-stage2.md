@@ -1,6 +1,6 @@
 # Wytyczne anotacji, etap 2: skutki AI dla pracy, nastawienie, rodzaj obawy, kompetencje i branża (YouTube)
 
-Definicje etykiet `stance`, `attitude`, `threat_type`, `competence_claim` i `sector` oraz zasady oceny są takie same jak dla Wykopu: [Wytyczne anotacji, etap 2 (Wykop)](../wykop/annotation-guidelines-stage2.md). Oceniasz tylko komentarze, które w etapie 1 mają `ai` = yes i `work` = yes. Poniżej tylko to, co różni komentarze z YouTube'a.
+Definicje etykiet `job_insecurity`, `insecurity_cause`, `sector`, `stance`, `attitude`, `threat_type` i `competence_claim` oraz zasady oceny są takie same jak dla Wykopu: [Wytyczne anotacji, etap 2 (Wykop)](../wykop/annotation-guidelines-stage2.md). Oceniasz komentarze, które w etapie 1 mają `work` = yes; komentarz bez AI ma puste etykiety o AI. Poniżej tylko to, co różni komentarze z YouTube'a.
 
 ## Specyfika YouTube'a
 

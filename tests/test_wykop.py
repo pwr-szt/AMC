@@ -10,6 +10,7 @@ from unittest.mock import patch
 from amc.classification import job_concern, job_concern_details
 from amc.csv_files import read_rows
 from amc.wykop import classification
+from amc.wykop.cleaning import CleaningStats, clean_csv
 from amc.wykop.collector import collect_comments, collect_entries
 from amc.wykop.records import COLUMNS, RowBuilder, scrub, select_comments
 from amc.wykop.selection import load_selection
@@ -102,6 +103,30 @@ class RecordTests(unittest.TestCase):
         self.assertEqual([c["id"] for c in select_comments(COMMENTS[1], None, 5)], [10, 11])
 
 
+class CleaningTests(unittest.TestCase):
+    def test_removes_empty_hashtag_only_and_duplicate_texts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "entries.csv"
+            target = Path(directory) / "clean.csv"
+            rows = [
+                {"entry_id": "1", "text": "Useful post", "type": "entry"},
+                {"entry_id": "2", "text": "   ", "type": "entry"},
+                {"entry_id": "3", "text": "#ai #praca", "type": "entry"},
+                {"entry_id": "4", "text": " useful   POST ", "type": "entry"},
+                {"entry_id": "5", "text": "Another post", "type": "entry"},
+            ]
+            with source.open("w", encoding="utf-8-sig", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=rows[0])
+                writer.writeheader()
+                writer.writerows(rows)
+
+            stats = clean_csv(source, target)
+
+            self.assertEqual(stats, CleaningStats(5, 2, 1, 1, 1))
+            with target.open(encoding="utf-8-sig", newline="") as stream:
+                self.assertEqual([row["entry_id"] for row in csv.DictReader(stream)], ["1", "5"])
+
+
 class CollectionTests(unittest.TestCase):
     def test_entries_then_comments_resume_without_repeats(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -146,11 +171,22 @@ class JobConcernTests(unittest.TestCase):
 
 class JobConcernDetailsTests(unittest.TestCase):
     LABELS = {
+        "job_insecurity": "yes",
+        "insecurity_cause": "ai",
+        "sector": "it",
         "stance": "threat",
         "attitude": "negative",
         "threat_type": "hiring",
         "competence_claim": "fewer",
+    }
+    NO_AI = {
+        "job_insecurity": "yes",
+        "insecurity_cause": "economy",
         "sector": "it",
+        "stance": "none",
+        "attitude": "none",
+        "threat_type": "none",
+        "competence_claim": "none",
     }
 
     @patch("amc.classification.job_concern_details.ask")
@@ -162,11 +198,34 @@ class JobConcernDetailsTests(unittest.TestCase):
         self.assertIs(ask.call_args.args[2], job_concern_details.INSTRUCTION)
         ask.return_value = {**self.LABELS, "stance": "opportunity", "threat_type": "none"}
         self.assertEqual(client.classify("AI", "m")["threat_type"], "")
+
+    @patch("amc.classification.job_concern_details.ask")
+    def test_work_texts_without_ai_get_empty_ai_labels(self, ask):
+        client = job_concern_details.OllamaClient()
+        ask.return_value = self.NO_AI
+        self.assertEqual(
+            client.classify("kryzys", "m"),
+            {
+                **self.NO_AI,
+                "stance": "",
+                "attitude": "",
+                "threat_type": "",
+                "competence_claim": "",
+            },
+        )
+        ask.return_value = {**self.NO_AI, "job_insecurity": "no", "insecurity_cause": "none"}
+        self.assertEqual(client.classify("praca", "m")["insecurity_cause"], "")
+        ask.return_value = {**self.LABELS, "stance": "none", "threat_type": "none"}
+        self.assertEqual(client.classify("AI", "m")["stance"], "none")
         for labels in (
             {**self.LABELS, "threat_type": "none"},
             {**self.LABELS, "stance": "none"},
             {**self.LABELS, "stance": "fear"},
             {**self.LABELS, "sector": "medicine"},
+            {**self.LABELS, "insecurity_cause": "none"},
+            {**self.LABELS, "job_insecurity": "no"},
+            {**self.NO_AI, "stance": "threat", "threat_type": "job_loss"},
+            {**self.NO_AI, "competence_claim": "more"},
             {key: self.LABELS[key] for key in ("stance", "attitude", "sector")},
         ):
             ask.return_value = labels

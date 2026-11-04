@@ -1,7 +1,8 @@
-"""Stage 2 labels (stance, attitude, threat_type, competence_claim, sector) via CLARIN-PL.
+"""Stage 2 labels via CLARIN-PL: job_insecurity, insecurity_cause and sector for every
+text, and stance, attitude, threat_type and competence_claim for texts that refer to AI.
 
-Input: texts that stage 1 labelled ai=yes and work=yes, by default wykop_ai_work.csv from
-export_ai_work.py. Output: wykop_stage2.csv, resumable like stage 1.
+Input: texts that stage 1 labelled work=yes, with or without AI, by default wykop_work.csv
+from export_work.py. Output: wykop_stage2.csv, resumable like stage 1.
 """
 
 import argparse
@@ -24,7 +25,7 @@ DEFAULT_MODEL = "deepseek-v4-flash-0731"
 def main(argv: list[str] | None = None) -> int:
     load_dotenv(ROOT / ".env", override=False)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=ROOT / "data/wykop/wykop_ai_work.csv")
+    parser.add_argument("--input", type=Path, default=ROOT / "data/wykop/wykop_work.csv")
     parser.add_argument("--output", type=Path, default=ROOT / "data/wykop/wykop_stage2.csv")
     parser.add_argument(
         "--model", help=f"CLARIN-PL model (default: CLARIN_MODEL or {DEFAULT_MODEL})"

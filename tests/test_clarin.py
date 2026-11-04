@@ -7,15 +7,17 @@ from amc.classification import job_concern_details
 from amc.classification.clarin import ClarinClient, ClarinError, json_object
 
 LABELS = {
+    "job_insecurity": "yes",
+    "insecurity_cause": "ai",
+    "sector": "it",
     "stance": "threat",
     "attitude": "negative",
     "threat_type": "hiring",
     "competence_claim": "fewer",
-    "sector": "it",
 }
 ANSWER = (
-    '{"stance": "threat", "attitude": "negative", "threat_type": "hiring", '
-    '"competence_claim": "fewer", "sector": "it"}'
+    '{"job_insecurity": "yes", "insecurity_cause": "ai", "sector": "it", "stance": "threat", '
+    '"attitude": "negative", "threat_type": "hiring", "competence_claim": "fewer"}'
 )
 
 
