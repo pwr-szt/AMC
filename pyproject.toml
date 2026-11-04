@@ -20,9 +20,24 @@ dev = [
     "ipykernel>=6.29,<8",
     "ruff==0.11.13",
 ]
+# Stage 2 BERT classifier (scripts/wykop/train_bert.py): uv sync --group bert
+# torch is the CUDA 12.6 build (NVIDIA GPU, e.g. RTX 40xx); it also runs, slowly, on CPU.
+bert = [
+    "torch>=2.6,<3",
+    "sacremoses>=0.1",
+    "transformers>=4.46,<5",
+]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu126" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
 
 [tool.ruff]
 target-version = "py310"

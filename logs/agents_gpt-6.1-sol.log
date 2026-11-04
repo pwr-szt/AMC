@@ -1,0 +1,15 @@
+gpt-6.1-sol: 65 batches (2600 texts) to annotate.
+200/2600 texts, 4 batches written, 0 failed
+400/2600 texts, 9 batches written, 0 failed
+600/2600 texts, 13 batches written, 0 failed
+800/2600 texts, 18 batches written, 0 failed
+1000/2600 texts, 23 batches written, 0 failed
+1200/2600 texts, 28 batches written, 0 failed
+1400/2600 texts, 32 batches written, 0 failed
+1600/2600 texts, 38 batches written, 0 failed
+1800/2600 texts, 43 batches written, 0 failed
+2000/2600 texts, 48 batches written, 0 failed
+2200/2600 texts, 53 batches written, 0 failed
+2400/2600 texts, 59 batches written, 0 failed
+2600/2600 texts, 65 batches written, 0 failed
+gpt-6.1-sol: wrote 65 batches; 0 texts failed (their batches will be redone).
