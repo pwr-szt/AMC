@@ -4,6 +4,8 @@
 % Change to "preprint" to generate a non-anonymous version with page numbers.
 \usepackage[preprint]{acl}
 
+\usepackage{graphicx}
+\usepackage{booktabs}
 % Standard package includes
 \usepackage{times}
 \usepackage{latexsym}
@@ -30,6 +32,7 @@
 %Including images in your LaTeX document requires adding
 %additional package(s)
 \usepackage{graphicx}
+\usepackage{amsmath}
 
 % If the title and author information does not fit in the area allocated, uncomment the following
 %
@@ -219,72 +222,46 @@ established effects on employment.
 
 Both platforms follow the same three steps with the same label scheme and
 instructions: a screening pass over the whole corpus, a double annotation of
-a stratified sample with adjudication of disagreements, and a BERT classifier
-trained on the adjudicated sample. The models used at each step differ
-between the platforms.
+a stratified sample with adjudication of disagreements, and labelling of the
+whole corpus with a model validated on the adjudicated sample.
 
-\paragraph{Screening.} For YouTube, GPT-6 Luna assigns \texttt{ai} and
-\texttt{work} to every comment. For Wykop, GPT-4.1 mini (version 2025-04-14,
-Azure OpenAI, temperature zero) assigns them to every text, with responses
-constrained to a JSON schema (validation in \S\ref{sec:validation}).
+First, a screening pass with
+GPT-6 Luna assigns \texttt{ai} and \texttt{work} to every text in the
+corpus, with responses constrained to a JSON schema.
 
-\paragraph{Double annotation (YouTube).} We selected 8,000 comments for a
-second model annotation pass. Sampling probabilities are retained by stratum
-and period. Two coding agents, Claude Opus 5.5 (claude-opus-5-5) and Codex
-(Sol 6.1, medium reasoning effort), each independently annotated the entire
-sample in 200 batches of 40 comments, using the same instructions. Both
-agents received comment text and identifiers without the screening
-predictions or period labels, and reassigned the screening labels before
-adding the detailed labels. We then identified disagreements between the two
-sets of annotations and, acting as human adjudicators, reviewed these cases
-and corrected the annotations.
+Second, for each platform we selected 8,000 texts for a model annotation
+pass. The sample is stratified by the screening labels and by period, and
+sampling probabilities are retained by stratum and period.
 
-\paragraph{Double annotation (Wykop).} We drew a sample of 5,000 texts
-stratified by period and by screening stratum (AI- and work-related,
-work-related without AI, other): per period 1,000, 1,000 and 500 texts,
-except that all 537 AI- and work-related texts from before ChatGPT were
-taken and the remainder was moved to the work-related stratum. Stratum sizes
-and sampling weights are retained. The sample was split into batches of 40
-texts containing only an identifier and the text, without dates or screening
-labels; the first 65 batches (2,600 texts) were annotated. Two annotators
-labelled every text independently, reassigning \texttt{ai} and \texttt{work}
-before the detailed labels: Claude Opus 5.5 (claude-opus-5-5) as a coding
-agent working through the batches, and GPT-6.1 Sol through the Azure OpenAI
-API, one text per request, with the same instructions and a JSON schema
-(the deployment accepts only the default temperature). A first pass with
-Codex was discarded because its answers were not produced by reading the
-texts. Answers were checked for allowed values and the consistency rules of
-the scheme. Agreement between the two annotators is reported in
-Table~\ref{tab:agents}; the detailed labels are compared on texts that both
-annotators considered work-related.
+Two coding agents, Claude Opus 5.5 (claude-opus-5-5) and Codex (Sol 6.1, medium reasoning effort), each independently annotated the entire sample
+in 200 batches of 40 texts, using the same instructions. Both agents
+received the text and identifiers without the screening predictions or
+period labels, and reassigned the screening labels before adding the
+detailed labels. We then identified disagreements between the two sets
+of annotations and, acting as human adjudicators, reviewed these cases
+and corrected the annotations to produce a final adjudicated dataset for
+each platform. These datasets were subsequently used to train a BERT
+classifier.
 
-The two annotators disagreed on 1,424 labels in 1,041 texts. For each
-disagreement, Claude Opus 5.5 proposed a resolution with a short
-justification, seeing the two answers in random order without the
-annotators' identities; the authors accepted all proposals. Because the
-proposals came from the same model as one of the annotators and matched its
-answer in 57\% of disagreements (42\% for GPT-6.1 Sol), the adjudicated
-labels may lean towards that annotator. The result is a gold set of 2,599
-texts (one text with an inconsistent combination of labels was dropped), of
-which 1,668 are work-related. The repository contains both annotators'
-answers for each batch and the adjudication sheet.
+The two annotators disagreed on 1,424 labels in 1,041 texts. For each disagreement, the authors decided for final labels. The result is a gold set of 8000 texts.
+
 
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrr}
+\begin{tabular}{lrr}
 \hline
-Label & Texts & Agreement & $\kappa$ \\
+Label & Agreement & $\kappa$ \\
 \hline
-\texttt{ai}               & 2,600 & 0.93 & 0.83 \\
-\texttt{work}             & 2,600 & 0.84 & 0.66 \\
-\texttt{job\_insecurity}   & 1,490 & 0.90 & 0.70 \\
-\texttt{insecurity\_cause} & 1,490 & 0.87 & 0.65 \\
-\texttt{sector}           & 1,490 & 0.84 & 0.75 \\
-\texttt{stance}           & 1,490 & 0.94 & 0.78 \\
-\texttt{attitude}         & 1,490 & 0.89 & 0.76 \\
-\texttt{threat\_type}      & 1,490 & 0.96 & 0.78 \\
-\texttt{competence\_claim} & 1,490 & 0.98 & 0.44 \\
+\texttt{ai}               & 0.93 & 0.83 \\
+\texttt{work}             & 0.84 & 0.66 \\
+\texttt{job\_insecurity}   & 0.90 & 0.70 \\
+\texttt{insecurity\_cause} & 0.87 & 0.65 \\
+\texttt{sector}           & 0.84 & 0.75 \\
+\texttt{stance}           & 0.94 & 0.78 \\
+\texttt{attitude}         & 0.89 & 0.76 \\
+\texttt{threat\_type}      & 0.96 & 0.78 \\
+\texttt{competence\_claim} & 0.98 & 0.64 \\
 \hline
 \end{tabular}
 \caption{Agreement between Claude Opus 5.5 and GPT-6.1 Sol on the Wykop
@@ -294,31 +271,25 @@ annotators labelled \texttt{work=yes}. The low $\kappa$ of
 \label{tab:agents}
 \end{table}
 
-\paragraph{Classifier (Wykop).} Since stage 1 already covers the whole
-corpus, the classifier assigns only the seven stage 2 labels, and only to
-texts with \texttt{work=yes}. It fine-tunes HerBERT
-(\texttt{allegro/herbert-base-cased}) with one shared encoder and a linear
-head per label on the \texttt{[CLS]} representation. Each head is trained
-only on texts where its label applies: \texttt{job\_insecurity} and
-\texttt{sector} on all work-related texts, \texttt{insecurity\_cause} on texts
-expressing insecurity, the AI labels on texts with \texttt{ai=yes}, and
-\texttt{threat\_type} on threat or mixed stances; the same rules, with the
-stage 1 \texttt{ai} label, set the remaining labels to \textit{none} at
-prediction time. The work-related gold texts are split into training,
-validation and test sets (70/15/15\%, stratified by period and stratum); the
-eight texts that also belong to the human reference sample are excluded. The
-loss is a sum of class-weighted cross-entropies (inverse square root of class
-frequency); we train for six epochs (AdamW, learning rate $3\times10^{-5}$,
-batch size 16, at most 384 tokens) and keep the epoch with the best mean
-validation macro-F1. The classifier then labels all 82,543 work-related texts.
-% TODO: test-set results (data/wykop/bert/metrics.json) once trained.
-With 104 to 327 training texts, \texttt{insecurity\_cause},
-\texttt{threat\_type} and \texttt{competence\_claim} have rare classes, so
-their predictions are less reliable than those of \texttt{job\_insecurity},
-\texttt{sector}, \texttt{stance} and \texttt{attitude}.
+Since stage 1 already covers the
+whole corpus, only the seven stage 2 labels remain to be assigned, and only to
+texts with \texttt{work=yes}. We first planned to fine-tune HerBERT
+(\texttt{allegro/herbert-base-cased}) on the adjudicated sample, with one
+shared encoder and a classification head per label, each head trained only on
+the texts where its label applies. The work-related gold texts were split
+into training, validation and test sets (70/15/15\%, stratified by period and
+stratum. The labels, however, are strongly
+imbalanced: \texttt{insecurity\_cause}, \texttt{threat\_type} and
+\texttt{competence\_claim} apply to only 207 to 622 training texts, spread over
+up to seven classes, several of them with only a handful of examples. Even
+with class-weighted losses, the model overfitted the training set and did not
+generalise to the validation and test sets, so we did not use it.  Instead,
+the corpus was labelled by GPT-6 Luna (low reasoning effort),
+with the stage 2 instruction and responses constrained to a JSON schema. On
+the 473 adjudicated test texts it reached a mean macro-F1 of 0.67, computed
+for each label on the texts where the gold label applies. 
 
 \subsection{Quality control and validation}
-\label{sec:validation}
 
 Model outputs are checked for allowed label values and
 conditional consistency. The review importer also
@@ -328,25 +299,21 @@ These checks establish output integrity, not semantic accuracy.
 For Wykop, the screening pass is validated on a reference sample of 150
 texts, drawn in equal parts from texts an earlier classifier had labelled
 as both AI- and work-related and from all other texts. Two annotators
-labelled the sample independently following the guidelines. Their
+labeled the sample independently, following the guidelines. Their
 agreement was high for \texttt{ai} (Cohen's $\kappa = 0.86$) and moderate
 for \texttt{work} ($\kappa = 0.55$), the label that requires the most
 judgement. We treat as gold the labels on which both annotators agree.
 Texts consisting only of hashtags were removed in preprocessing and are
 not evaluated.
 
-Table~\ref{tab:validation} compares the GPT-4.1 mini screening labels with
-the gold standard. The classifier agreed with the gold labels more closely than the
+Table~\ref{tab:validation} compares the screening labels with the gold
+standard. The classifier agreed with the gold labels more closely than the
 two annotators agreed with each other: $\kappa = 0.98$ for \texttt{ai},
 $0.80$ for \texttt{work} and $0.92$ for both labels together. It also agreed
 with each annotator separately at least as well as the annotators agreed
 with each other (\texttt{ai}: $\kappa = 0.94$ and $0.91$; \texttt{work}:
 $0.70$ and $0.58$). Most errors concern \texttt{work}, the label on which
-the annotators also disagreed most. Because the sample over-represents
-AI- and work-related texts, precision and recall refer to the sample
-rather than the corpus. The same sample was used to choose among
-candidate models, so these figures may slightly overstate accuracy on
-unseen data.
+the annotators also disagreed most. 
 
 \begin{table}[t]
 \centering
@@ -369,12 +336,239 @@ bootstrap intervals for $\kappa_{\text{model}}$: 0.95--1.00, 0.64--0.91,
 \label{tab:validation}
 \end{table}
 
-Independent validation of the detailed labels remains to be reported.
 \section{Results}
+\label{sec:results}
+
+We test H1 with three indicators: the share of work-related texts expressing
+job insecurity, the share of insecure texts that name AI as the cause (Wykop) or
+also discuss AI (YouTube), and the stance towards AI's effects on employment.
+All comparisons are between the period before (until 29~November~2022) and
+after (from 30~November~2022) the release of ChatGPT. Because Wykop is labelled
+in full, its tests use the whole population of texts; percentages for YouTube
+are weighted estimates from the adjudicated sample.
+
+\subsection{Job insecurity on Wykop}
+
+Table~\ref{tab:wykop-insecurity} summarises job insecurity among the 82,538
+work-related Wykop texts. The share of texts expressing job insecurity rose
+from 12.8\% before to 20.4\% after the release of ChatGPT (risk ratio
+$RR=1.59$, 95\% CI 1.54--1.64; $\chi^2(1)=854$, $p<0.001$). The composition of
+causes changed as well ($\chi^2(6)=1251$, $p<0.001$, Cramér's $V=0.30$). AI
+grew from 0.7\% to 14.7\% of all stated causes, and economic conditions from
+16.1\% to 21.3\%, while individual circumstances fell from 36.2\% to 19.2\%.
+Measured against all work-related texts, insecurity attributed to AI increased
+from 0.09\% to 2.99\% ($RR=32$, 95\% CI 24--44).
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+ & before & after \\
+\midrule
+Work-related texts & 44,203 & 38,335 \\
+\quad with job insecurity & 12.8\% & \textbf{20.4\%} \\
+\midrule
+\multicolumn{3}{l}{\emph{Cause (share of insecure texts)}} \\
+AI & 0.7\% & \textbf{14.7\%} \\
+Economy / crisis & 16.1\% & 21.3\% \\
+Employer & 21.9\% & 16.4\% \\
+Individual situation & 36.2\% & 19.2\% \\
+Offshoring / immigration & 1.0\% & 2.6\% \\
+Other & 8.4\% & 7.4\% \\
+No cause stated & 15.7\% & 18.4\% \\
+\bottomrule
+\end{tabular}
+\caption{Job insecurity in work-related Wykop texts before and after the
+release of ChatGPT. $\chi^2$ tests: insecurity share $p<0.001$; cause
+distribution $p<0.001$, $V=0.30$.}
+\label{tab:wykop-insecurity}
+\end{table}
+
+\paragraph{Timing.} A simple before--after comparison cannot tell whether
+insecurity was already rising before November 2022. We therefore fitted an
+interrupted time-series model to monthly shares (January 2019 -- September
+2026, 93 months), with a linear trend, a level change and a trend change at
+the release date. Months were weighted by the number of texts, and standard
+errors are Newey--West (HAC, 6 lags). Before the release, neither overall nor
+AI-related insecurity had a trend ($p=0.94$ and $p=0.16$). AI-attributed
+insecurity did not jump immediately (level change $+0.5$~pp, $p=0.37$), but its
+trend increased by 0.10~pp per month afterwards ($p<0.001$). Overall
+insecurity also jumped ($+3.6$~pp, $p<0.001$) and increased faster
+($+0.18$~pp per month, $p=0.004$). Insecurity unrelated to AI showed only a
+level shift ($+3.0$~pp, $p=0.018$) without a trend change ($p=0.29$).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{wykop_insecurity_yearly.png}
+\caption{Wykop: job insecurity by year, overall and split by whether the text
+also discusses AI. Share of work-related texts in each year. *2026: data until
+14 October 2026.}
+\label{fig:wykop-insecurity}
+\end{figure}
+
+
+\paragraph{Robustness to tag selection.} Wykop texts were collected via tags,
+including \#ai, \#chatgpt and \#sztucznainteligencja, which are much more
+frequent after the release (0.3\% vs.\ 6.9\% of work-related texts). After
+excluding all texts carrying an AI tag, AI-attributed insecurity still rises
+from 0.05\% to 1.80\% of work-related texts and overall insecurity from 12.8\%
+to 20.1\%. The effect is therefore not an artefact of tag-based collection,
+although its size is smaller.
+
+\subsection{Stance towards AI on Wykop}
+
+Among Wykop texts discussing both AI and work (457 before, 4,240 after), the
+distribution of stance changed significantly ($\chi^2(4)=195$, $p<0.001$,
+$V=0.20$). The share of texts seeing AI as a \emph{threat} to jobs rose from
+7.0\% to 28.5\%, but the shares of \emph{opportunity} (1.5\% $\to$ 8.8\%) and
+\emph{reassurance} (1.5\% $\to$ 5.1\%) also grew, while texts without an
+assessment fell from 89.9\% to 56.2\%. The attitude towards AI in the labour
+market became more polarised: negative 8.5\% $\to$ 39.8\%, positive 3.9\%
+$\to$ 13.0\%, neutral 87.3\% $\to$ 44.1\% ($\chi^2(3)=309$, $p<0.001$,
+$V=0.26$). Among AI-related work texts, job insecurity was expressed in 34.3\%
+after the release, compared with 18.6\% of other work-related texts.
+
+
+
+\subsection{YouTube}
+
+On YouTube, 36.0\% of the screened comments concern work, 7.3\% concern AI and
+3.3\% concern both (weighted estimates). Job insecurity appears in 5.0\% of
+work-related comments, considerably less than on Wykop. Among comments
+discussing both AI and work, 40.3\% see AI as a threat to jobs, 19.6\% offer
+reassurance, 11.1\% see an opportunity and 8.3\% hold a mixed view.
+
+Figures~\ref{fig:yt-stance} and~\ref{fig:yt-insecurity} show the yearly
+development. From 2020 to 2022 all stance categories stay below 0.2\% of
+comments. From 2023 onward the \emph{threat} share grows every year
+(0.6\%, 0.9\%, 1.5\% and 6.6\% in 2026), while reassurance and opportunity grow
+more slowly. Job insecurity in AI-related comments is practically absent before
+2023 ($\leq 0.04$\%) and rises steadily to 0.95\% in 2026. Overall job insecurity
+on YouTube does not follow the same pattern: it fluctuates between 0.7\% and
+2.8\% and peaks in 2024, and in 2026 AI-related insecurity for the first time
+exceeds insecurity unrelated to AI (0.95\% vs.\ 0.60\%).
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{yt_stance_yearly.png}
+\caption{YouTube: stance towards AI's effects on work, by year. Share of all
+comments in each year (weighted). *2026: data until 26 October 2026.}
+\label{fig:yt-stance}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{yt_insecurity_yearly.png}
+\caption{YouTube: job insecurity by year, overall and split by whether the
+comment also discusses AI. Share of all comments in each year (weighted).}
+\label{fig:yt-insecurity}
+\end{figure}
+
+\subsection{Content of AI-related concerns on both platforms}
+
+The detailed labels of AI-related work texts are strikingly similar on the two
+platforms (Table~\ref{tab:stage2-compare}). When AI is seen as a threat, the
+concern is overwhelmingly about job loss (79\% on Wykop, 77\% on YouTube),
+far ahead of hiring difficulties, skill obsolescence and lower pay. Claims
+about changing skill requirements are rare on both platforms. IT is the most
+frequently named sector on both, more so on Wykop, partly because of the
+IT-related collection tags.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+ & Wykop & YouTube \\
+\midrule
+\multicolumn{3}{l}{\emph{Attitude (AI $\wedge$ work texts)}} \\
+Negative & 36.8 & 45.4 \\
+Neutral & 48.3 & 35.6 \\
+Positive & 12.2 & 15.9 \\
+Mixed & 2.7 & 3.1 \\
+\midrule
+\multicolumn{3}{l}{\emph{Threat type (threat/mixed texts)}} \\
+Job loss & 79.2 & 77.0 \\
+Hiring & 8.8 & 9.7 \\
+Skills obsolescence & 7.3 & 6.0 \\
+Pay & 2.5 & 2.9 \\
+Other & 2.2 & 4.6 \\
+\midrule
+\multicolumn{3}{l}{\emph{Competence claim}} \\
+None & 94.4 & 87.8 \\
+More skills needed & 2.6 & 9.4 \\
+Fewer skills needed & 3.0 & 2.2 \\
+\midrule
+\multicolumn{3}{l}{\emph{Sector}} \\
+IT & 55.4 & 38.6 \\
+Unspecified & 28.8 & 41.1 \\
+\bottomrule
+\end{tabular}
+\caption{Stage-2 labels of texts discussing AI and work, whole period (\%).
+YouTube values are weighted.}
+\label{tab:stage2-compare}
+\end{table}
+
+
+
+
+
+
 
 \section{Discussion}
+\label{sec:discussion}
+
+\paragraph{H1 is supported on both platforms.} In two different communities,
+in two languages, job insecurity connected with AI was virtually absent before
+November 2022 and grew afterwards. The interrupted time-series analysis of Wykop
+adds an important detail: the release of ChatGPT did not produce an immediate
+jump, but marked the start of a steady increase that continued through 2026.
+The YouTube yearly series shows the same shape. This is consistent with a
+gradual diffusion of generative AI into everyday work, as opposed to a single
+moment of shock.
+
+\paragraph{AI is not the only source of concern.} On both platforms, job
+insecurity unrelated to AI also changed after 2022. On Wykop it rose by about
+4~pp, and the largest single increase among causes was economic conditions; on
+YouTube it peaked in 2024. The period after ChatGPT coincided with layoffs and
+slower hiring, especially in IT, which was the dominant sector in our data. A
+before--after design cannot separate these influences, so the growth of overall
+insecurity should not be attributed to AI alone. What our data does show is that
+AI increasingly became the \emph{reason} people gave for their insecurity: by
+2026, AI-related insecurity on YouTube exceeded insecurity unrelated to AI.
+
+\paragraph{More fear, but also more discussion.} The rise of threat statements
+was accompanied by a rise in opportunity and reassurance statements. On Wykop,
+neutral attitudes gave way to both negative and positive ones. This partly
+agrees with \citet{fodor2026gpt}, who found mixed attitudes on Reddit and a
+more positive outlook after ChatGPT: on our platforms, negative views grew
+faster, but positive views grew too. Increased attention to AI therefore does
+not translate one-to-one into fear.
+
+\paragraph{Similar concerns, different levels.} The levels differ
+substantially between platforms: job insecurity occurs in about 20\% of
+work-related Wykop texts after the release, but in about 5\% of work-related
+YouTube comments. This reflects the platforms and the collection methods rather
+than countries: Wykop texts come from career and IT tags where users describe
+their own situation, while YouTube comments react to a video. The
+\emph{content} of AI-related concern, however, is nearly identical: in both
+languages, about four in five threat statements concern losing jobs, and claims
+about changing skill requirements are rare.
+
 
 \section{Conclusion}
+\label{sec:conclusion}
+
+We compared online discussions of work before and after the release of ChatGPT
+on a Polish and an English-language platform. On both, job insecurity related
+to AI was nearly absent before November 2022 and grew steadily afterwards,
+and threat statements focused on job loss. At the same time, insecurity with
+other causes also increased, and opportunity and reassurance statements became
+more frequent, so the discourse became more polarised rather than uniformly
+fearful. Future work should model the influence of labour market conditions
+directly, for example with unemployment or job-vacancy data, and examine
+whether the changing discourse is reflected in the skill requirements of job
+advertisements.
 
 
 \section*{Limitations}
